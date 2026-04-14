@@ -1,6 +1,5 @@
 package com.sparrowlogic.numpy4j;
 
-import java.lang.foreign.Arena;
 import java.lang.foreign.ValueLayout;
 
 /**

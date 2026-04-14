@@ -1,7 +1,6 @@
 package com.sparrowlogic.numpy4j;
 
 import jdk.incubator.vector.FloatVector;
-import jdk.incubator.vector.VectorOperators;
 import jdk.incubator.vector.VectorSpecies;
 
 import java.lang.foreign.*;

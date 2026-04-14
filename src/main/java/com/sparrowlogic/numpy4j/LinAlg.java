@@ -1,7 +1,6 @@
 package com.sparrowlogic.numpy4j;
 
 import java.lang.foreign.*;
-import java.lang.invoke.MethodHandle;
 
 /**
  * numpy.linalg equivalent. Uses Accelerate.framework LAPACK via FFM on macOS,
