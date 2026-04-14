@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-latest, ubuntu-latest ]
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '26-ea'
+          cache: maven
+
+      - name: Compile (multi-release JAR)
+        run: ./mvnw -B compile
+
+      - name: Checkstyle
+        run: ./mvnw -B checkstyle:check
+
+      - name: Spotless
+        run: ./mvnw -B spotless:check
+
+      - name: Tests (scalar path — no Vector API)
+        run: ./mvnw -B test
+
+      - name: Tests (SIMD path — with Vector API)
+        run: ./mvnw -B test -Pvector-api
+
+      - name: Upload Coverage to Codecov
+        if: matrix.os == 'ubuntu-latest'
+        uses: codecov/codecov-action@v6
+        with:
+          files: target/site/jacoco/jacoco.xml
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  parity:
+    name: NumPy Mathematical Parity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '26-ea'
+          cache: maven
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install NumPy
+        run: pip install numpy==2.2.5
+
+      - name: Generate NumPy reference values
+        run: python3 tools/validate_against_reference.py > tools/reference_values.json
+
+      - name: Run parity validation
+        run: ./mvnw -B test -Dtest=ValidateParityTest
+
+  publish:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Delete existing package
+        run: |
+          gh api --method DELETE /user/packages/maven/com.sparrowlogic.numpy4j || true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '26-ea'
+          cache: maven
+          server-id: github
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+
+      - name: Publish to GitHub Packages
+        run: ./mvnw -B deploy -DskipTests
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
