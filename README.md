@@ -1,5 +1,10 @@
 # numpy4j
 
+[![CI](https://github.com/sparrowlogic/numpy4j/actions/workflows/ci.yml/badge.svg)](https://github.com/sparrowlogic/numpy4j/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/sparrowlogic/numpy4j/branch/main/graph/badge.svg)](https://codecov.io/gh/sparrowlogic/numpy4j)
+[![Java 26](https://img.shields.io/badge/Java-26-blue)](https://openjdk.org/projects/jdk/26/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A 1:1 NumPy port for Java 26 using FFM (Foreign Function & Memory API), SIMD (Vector API preview), and AMX offloading on
 Apple Silicon.
 
