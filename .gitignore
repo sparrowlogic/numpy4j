@@ -36,4 +36,5 @@ build/
 .vscode/
 
 ### Mac OS ###
-.DS_Storereference_repos/numpy
+.DS_Store
+reference_repos/
