@@ -258,10 +258,36 @@ public final class MatMul {
         int inner = ca.shape(2);
         int cols = cb.shape(2);
         NdArray out = NdArrayFactory.zeros(a.arena(), DType.FLOAT32, batch, rows, cols);
-        for (int bi = 0; bi < batch; bi++) {
-            batchedMatmulSlice(ca, cb, out, bi, rows, inner, cols);
+        if (AccelerateOps.isAvailable()) {
+            batchedMatmulAccelerate(ca, cb, out, batch, rows, inner, cols);
+        } else {
+            for (int bi = 0; bi < batch; bi++) {
+                batchedMatmulSlice(ca, cb, out, bi, rows, inner, cols);
+            }
         }
         return out;
+    }
+
+    private static void batchedMatmulAccelerate(final NdArray ca, final NdArray cb, final NdArray out,
+                                                final int batch, final int m, final int k, final int n) {
+        try (var arena = Arena.ofConfined()) {
+            MemorySegment aSeg = AccelerateOps.ensureNative(ca.data(), ca.size(), arena);
+            MemorySegment bSeg = AccelerateOps.ensureNative(cb.data(), cb.size(), arena);
+            MemorySegment cSeg = AccelerateOps.ensureNative(out.data(), out.size(), arena);
+            long aStride = (long) m * k * Float.BYTES;
+            long bStride = (long) k * n * Float.BYTES;
+            long cStride = (long) m * n * Float.BYTES;
+            for (int bi = 0; bi < batch; bi++) {
+                AccelerateOps.sgemm(m, n, k, 1.0f,
+                        aSeg.asSlice(bi * aStride, aStride), k,
+                        bSeg.asSlice(bi * bStride, bStride), n,
+                        0.0f, cSeg.asSlice(bi * cStride, cStride), n);
+            }
+            // Copy result back if out.data() was not native
+            if (cSeg != out.data()) {
+                MemorySegment.copy(cSeg, 0, out.data(), 0, (long) batch * m * n * Float.BYTES);
+            }
+        }
     }
 
     private static void batchedMatmulSlice(final NdArray ca, final NdArray cb, final NdArray out,

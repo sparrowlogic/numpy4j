@@ -16,7 +16,7 @@ jobs:
     name: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-java@v5
         with:
@@ -52,7 +52,7 @@ jobs:
     name: NumPy Mathematical Parity
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - uses: actions/setup-java@v5
         with:
@@ -74,6 +74,38 @@ jobs:
       - name: Run parity validation
         run: ./mvnw -B test -Dtest=ValidateParityTest
 
+  bit-parity:
+    name: NumPy Bit-Exact Parity
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '26-ea'
+          cache: maven
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install NumPy
+        run: pip install numpy==2.4.4
+
+      - name: Generate NumPy reference values
+        run: python3 tools/generate_numpy_reference.py > tools/numpy_reference.properties
+
+      - name: Compile
+        run: ./mvnw -B compile
+
+      - name: Validate bit-exact parity
+        run: >
+          java --enable-preview --source 26
+          --class-path target/classes
+          tools/ValidateNumpyParity.java
+
   publish:
     needs: build
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -84,7 +116,7 @@ jobs:
       packages: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Delete existing package
         run: |

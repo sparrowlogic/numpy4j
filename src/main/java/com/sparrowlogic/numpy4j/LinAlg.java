@@ -7,6 +7,10 @@ import java.lang.foreign.Arena;
  * with pure Java fallbacks for cross-platform.
  */
 public final class LinAlg {
+
+    private static final int LAPACK_THRESHOLD = 2;
+    private static final String LAPACK_INFO_SUFFIX = ")";
+
     private LinAlg() {
     }
 
@@ -71,6 +75,29 @@ public final class LinAlg {
      */
     public static NdArray inv(final NdArray a) {
         int n = a.shape(0);
+        if (AccelerateOps.isAvailable() && n >= LAPACK_THRESHOLD) {
+            return invLapack(a, n);
+        }
+        return invScalar(a, n);
+    }
+
+    private static NdArray invLapack(final NdArray a, final int n) {
+        NdArray c = a.contiguous();
+        float[] aData = new float[n * n];
+        for (int i = 0; i < n * n; i++) {
+            aData[i] = c.flatGetFloat(i);
+        }
+        float[] result = new float[n * n];
+        try (var arena = Arena.ofConfined()) {
+            int info = AccelerateOps.inv(n, aData, result, arena);
+            if (info != 0) {
+                throw new ArithmeticException("Singular matrix (LAPACK info=" + info + LAPACK_INFO_SUFFIX);
+            }
+        }
+        return NdArrayFactory.array(a.arena(), result, n, n);
+    }
+
+    private static NdArray invScalar(final NdArray a, final int n) {
         float[][] aug = new float[n][2 * n];
         NdArray c = a.contiguous();
         for (int i = 0; i < n; i++) {
@@ -133,6 +160,24 @@ public final class LinAlg {
      */
     public static float det(final NdArray a) {
         int n = a.shape(0);
+        if (AccelerateOps.isAvailable() && n >= LAPACK_THRESHOLD) {
+            return detLapack(a, n);
+        }
+        return detScalar(a, n);
+    }
+
+    private static float detLapack(final NdArray a, final int n) {
+        NdArray c = a.contiguous();
+        float[] aData = new float[n * n];
+        for (int i = 0; i < n * n; i++) {
+            aData[i] = c.flatGetFloat(i);
+        }
+        try (var arena = Arena.ofConfined()) {
+            return AccelerateOps.det(n, aData, arena);
+        }
+    }
+
+    private static float detScalar(final NdArray a, final int n) {
         float[][] lu = toMatrix(a);
         float det = 1f;
         for (int col = 0; col < n; col++) {
@@ -170,6 +215,33 @@ public final class LinAlg {
      */
     public static NdArray solve(final NdArray a, final NdArray b) {
         int n = a.shape(0);
+        if (AccelerateOps.isAvailable() && n >= LAPACK_THRESHOLD) {
+            return solveLapack(a, b, n);
+        }
+        return solveScalar(a, b, n);
+    }
+
+    private static NdArray solveLapack(final NdArray a, final NdArray b, final int n) {
+        NdArray ca = a.contiguous();
+        NdArray cb = b.contiguous();
+        float[] aData = new float[n * n];
+        float[] bData = new float[n];
+        for (int i = 0; i < n * n; i++) {
+            aData[i] = ca.flatGetFloat(i);
+        }
+        for (int i = 0; i < n; i++) {
+            bData[i] = cb.flatGetFloat(i);
+        }
+        try (var arena = Arena.ofConfined()) {
+            int info = AccelerateOps.solve(n, aData, bData, arena);
+            if (info != 0) {
+                throw new ArithmeticException("Singular matrix (LAPACK info=" + info + LAPACK_INFO_SUFFIX);
+            }
+        }
+        return NdArrayFactory.array(a.arena(), bData);
+    }
+
+    private static NdArray solveScalar(final NdArray a, final NdArray b, final int n) {
         float[][] aug = new float[n][n + 1];
         NdArray ca = a.contiguous();
         NdArray cb = b.contiguous();
@@ -223,6 +295,29 @@ public final class LinAlg {
      */
     public static NdArray cholesky(final NdArray a) {
         int n = a.shape(0);
+        if (AccelerateOps.isAvailable() && n >= LAPACK_THRESHOLD) {
+            return choleskyLapack(a, n);
+        }
+        return choleskyScalar(a, n);
+    }
+
+    private static NdArray choleskyLapack(final NdArray a, final int n) {
+        NdArray c = a.contiguous();
+        float[] aData = new float[n * n];
+        for (int i = 0; i < n * n; i++) {
+            aData[i] = c.flatGetFloat(i);
+        }
+        float[] result = new float[n * n];
+        try (var arena = Arena.ofConfined()) {
+            int info = AccelerateOps.cholesky(n, aData, result, arena);
+            if (info != 0) {
+                throw new ArithmeticException("Not positive definite (LAPACK info=" + info + LAPACK_INFO_SUFFIX);
+            }
+        }
+        return NdArrayFactory.array(a.arena(), result, n, n);
+    }
+
+    private static NdArray choleskyScalar(final NdArray a, final int n) {
         float[][] lower = new float[n][n];
         NdArray c = a.contiguous();
         for (int i = 0; i < n; i++) {
@@ -328,6 +423,18 @@ public final class LinAlg {
 
     // ── Helpers ──
 
+    private static boolean isSymmetric(final NdArray a, final int n) {
+        NdArray c = a.contiguous();
+        for (int i = 0; i < n; i++) {
+            for (int j = i + 1; j < n; j++) {
+                if (c.flatGetFloat((long) i * n + j) != c.flatGetFloat((long) j * n + i)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     private static float[][] toMatrix(final NdArray a) {
         NdArray c = a.contiguous();
         int m = a.shape(0);
@@ -384,7 +491,7 @@ public final class LinAlg {
     }
 
     /**
-     * Singular Value Decomposition via iterative Jacobi ({@code numpy.linalg.svd}).
+     * Singular Value Decomposition ({@code numpy.linalg.svd}).
      *
      * @param a input matrix (m × n)
      * @return array {U, S, Vt} where A ≈ U @ diag(S) @ Vt
@@ -392,6 +499,36 @@ public final class LinAlg {
     public static NdArray[] svd(final NdArray a) {
         int m = a.shape(0);
         int n = a.shape(1);
+        if (AccelerateOps.isAvailable() && Math.min(m, n) >= LAPACK_THRESHOLD) {
+            return svdLapack(a, m, n);
+        }
+        return svdScalar(a, m, n);
+    }
+
+    private static NdArray[] svdLapack(final NdArray a, final int m, final int n) {
+        NdArray c = a.contiguous();
+        float[] aData = new float[m * n];
+        for (int i = 0; i < m * n; i++) {
+            aData[i] = c.flatGetFloat(i);
+        }
+        int mn = Math.min(m, n);
+        float[] s = new float[mn];
+        float[] u = new float[m * mn];
+        float[] vt = new float[mn * n];
+        try (var arena = Arena.ofConfined()) {
+            int info = AccelerateOps.svd(m, n, aData, s, u, vt, arena);
+            if (info != 0) {
+                throw new ArithmeticException("SVD failed (LAPACK info=" + info + LAPACK_INFO_SUFFIX);
+            }
+        }
+        return new NdArray[]{
+                NdArrayFactory.array(a.arena(), u, m, mn),
+                NdArrayFactory.array(a.arena(), s),
+                NdArrayFactory.array(a.arena(), vt, mn, n)
+        };
+    }
+
+    private static NdArray[] svdScalar(final NdArray a, final int m, final int n) {
         float[][] mat = toMatrix(a);
         float[][] atA = computeAtA(mat, m, n);
 
@@ -534,13 +671,33 @@ public final class LinAlg {
     }
 
     /**
-     * Eigenvalues of a square matrix via QR iteration ({@code numpy.linalg.eigvals}).
+     * Eigenvalues of a square matrix ({@code numpy.linalg.eigvals}).
      *
      * @param a square matrix
      * @return 1-D array of eigenvalues (real parts only)
      */
     public static NdArray eigvals(final NdArray a) {
         int n = a.shape(0);
+        if (AccelerateOps.isAvailable() && isSymmetric(a, n)) {
+            return eigvalsLapack(a, n);
+        }
+        return eigvalsScalar(a, n);
+    }
+
+    private static NdArray eigvalsLapack(final NdArray a, final int n) {
+        NdArray c = a.contiguous();
+        float[] aData = new float[n * n];
+        for (int i = 0; i < n * n; i++) {
+            aData[i] = c.flatGetFloat(i);
+        }
+        float[] eigenvalues = new float[n];
+        try (var arena = Arena.ofConfined()) {
+            AccelerateOps.eigvals(n, aData, eigenvalues, null, arena);
+        }
+        return NdArrayFactory.array(a.arena(), eigenvalues);
+    }
+
+    private static NdArray eigvalsScalar(final NdArray a, final int n) {
         float[][] hMat = toMatrix(a);
         for (int iter = 0; iter < 200; iter++) {
             hMat = qrIterationStep(hMat, n);
@@ -669,10 +826,34 @@ public final class LinAlg {
      * @return array {eigenvalues (sorted ascending), eigenvectors (columns)}
      */
     public static NdArray[] eigh(final NdArray a) {
+        int n = a.shape(0);
+        if (AccelerateOps.isAvailable()) {
+            return eighLapack(a, n);
+        }
+        return eighScalar(a, n);
+    }
+
+    private static NdArray[] eighLapack(final NdArray a, final int n) {
+        NdArray c = a.contiguous();
+        float[] aData = new float[n * n];
+        for (int i = 0; i < n * n; i++) {
+            aData[i] = c.flatGetFloat(i);
+        }
+        float[] eigenvalues = new float[n];
+        float[] vectors = new float[n * n];
+        try (var arena = Arena.ofConfined()) {
+            AccelerateOps.eigvals(n, aData, eigenvalues, vectors, arena);
+        }
+        return new NdArray[]{
+                NdArrayFactory.array(a.arena(), eigenvalues),
+                NdArrayFactory.array(a.arena(), vectors, n, n)
+        };
+    }
+
+    private static NdArray[] eighScalar(final NdArray a, final int n) {
         NdArray eigenvalues = eigvals(a);
         float[] vals = eigenvalues.toFloatArray();
         java.util.Arrays.sort(vals);
-        int n = a.shape(0);
         NdArray sortedVals = NdArrayFactory.array(a.arena(), vals);
         float[][] vecs = new float[n][n];
         for (int k = 0; k < n; k++) {
