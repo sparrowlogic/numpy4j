@@ -50,6 +50,12 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.jspecify</groupId>
+            <artifactId>jspecify</artifactId>
+            <version>1.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>${junit.version}</version>
@@ -173,7 +179,7 @@
                     <suppressionsLocation>checkstyle-suppressions.xml</suppressionsLocation>
                     <consoleOutput>true</consoleOutput>
                     <failsOnError>false</failsOnError>
-                    <failOnViolation>false</failOnViolation>
+                    <failOnViolation>true</failOnViolation>
                     <violationSeverity>warning</violationSeverity>
                     <excludes>**/module-info.java</excludes>
                 </configuration>

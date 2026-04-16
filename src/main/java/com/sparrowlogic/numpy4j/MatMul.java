@@ -1,5 +1,6 @@
 package com.sparrowlogic.numpy4j;
 
+import org.jspecify.annotations.Nullable;
 import java.lang.foreign.Arena;
 import java.lang.foreign.FunctionDescriptor;
 import java.lang.foreign.Linker;
@@ -12,10 +13,10 @@ import java.lang.invoke.WrongMethodTypeException;
 /**
  * Matrix multiplication with Apple AMX offloading via Accelerate.framework cblas_sgemm,
  * falling back to SIMD-tiled pure Java matmul.
- */
+     */
 public final class MatMul {
 
-    private static final MethodHandle CBLAS_SGEMM;
+    private static final @Nullable MethodHandle CBLAS_SGEMM;
 
     private static final boolean HAS_ACCELERATE;
 
@@ -54,6 +55,10 @@ public final class MatMul {
 
     /**
      * numpy.dot for 1D vectors.
+     *
+     * @param a input array
+     * @param b second array
+     * @return the computed value
      */
     public static float dot(final NdArray a, final NdArray b) {
         return SimdOps.get().dot(a.contiguous().data(), b.contiguous().data(), a.size());
@@ -61,6 +66,10 @@ public final class MatMul {
 
     /**
      * numpy.matmul for 2D matrices.
+     *
+     * @param a input array
+     * @param b second array
+     * @return result array
      */
     public static NdArray matmul(final NdArray a, final NdArray b) {
         if (a.ndim() == 1 && b.ndim() == 1) {
@@ -87,6 +96,10 @@ public final class MatMul {
 
     /**
      * numpy.outer
+     *
+     * @param a input array
+     * @param b second array
+     * @return result array
      */
     public static NdArray outer(final NdArray a, final NdArray b) {
         NdArray ca = a.contiguous();
@@ -106,6 +119,10 @@ public final class MatMul {
 
     /**
      * numpy.inner (for 1D: same as dot).
+     *
+     * @param a input array
+     * @param b second array
+     * @return the computed value
      */
     public static float inner(final NdArray a, final NdArray b) {
         return dot(a, b);
@@ -166,6 +183,11 @@ public final class MatMul {
 
     /**
      * numpy.tensordot with axes=n (contract last n axes of a with first n of b).
+     *
+     * @param a input array
+     * @param b second array
+     * @param axes axis permutation
+     * @return result array
      */
     public static NdArray tensordot(final NdArray a, final NdArray b, final int axes) {
         return matmul(a, b);
@@ -173,6 +195,10 @@ public final class MatMul {
 
     /**
      * numpy.cross for 3D vectors.
+     *
+     * @param a input array
+     * @param b second array
+     * @return result array
      */
     public static NdArray cross(final NdArray a, final NdArray b) {
         NdArray ca = a.contiguous();
@@ -194,6 +220,10 @@ public final class MatMul {
 
     /**
      * numpy.vdot — flattened dot product.
+     *
+     * @param a input array
+     * @param b second array
+     * @return the computed value
      */
     public static float vdot(final NdArray a, final NdArray b) {
         return dot(ShapeOps.flatten(a), ShapeOps.flatten(b));
@@ -201,6 +231,9 @@ public final class MatMul {
 
     /**
      * numpy.linalg.multi_dot — chained matmul.
+     *
+     * @param arrays arrays to combine
+     * @return result array
      */
     public static NdArray multiDot(final NdArray... arrays) {
         NdArray result = arrays[0];
@@ -212,6 +245,10 @@ public final class MatMul {
 
     /**
      * Batched matmul for 3D arrays: (batch, M, K) @ (batch, K, N) -> (batch, M, N).
+     *
+     * @param a input array
+     * @param b second array
+     * @return result array
      */
     public static NdArray batchedMatmul(final NdArray a, final NdArray b) {
         NdArray ca = a.contiguous();

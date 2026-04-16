@@ -1,5 +1,6 @@
 package com.sparrowlogic.numpy4j;
 
+import org.jspecify.annotations.Nullable;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
 import java.util.logging.Logger;
@@ -15,7 +16,7 @@ final class SimdOps {
     private static final SimdOps INSTANCE;
     private static final boolean VECTOR_API_AVAILABLE;
 
-    private final VectorOpsDelegate delegate;
+    private final @Nullable VectorOpsDelegate delegate;
 
     static {
         VectorOpsDelegate d = null;
@@ -35,7 +36,7 @@ final class SimdOps {
         INSTANCE = new SimdOps(d);
     }
 
-    private SimdOps(final VectorOpsDelegate delegate) {
+    private SimdOps(final @Nullable VectorOpsDelegate delegate) {
         this.delegate = delegate;
     }
 

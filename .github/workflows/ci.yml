@@ -36,8 +36,8 @@ jobs:
       - name: Tests (scalar path — no Vector API)
         run: ./mvnw -B test
 
-      - name: Tests (SIMD path — with Vector API)
-        run: ./mvnw -B test -Pvector-api
+      - name: Tests + Coverage (SIMD path — with Vector API)
+        run: ./mvnw -B verify -Pvector-api
 
       - name: Upload Coverage to Codecov
         if: matrix.os == 'ubuntu-latest'
