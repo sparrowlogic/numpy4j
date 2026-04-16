@@ -24,6 +24,9 @@ jobs:
       - name: Set version from tag
         run: ./mvnw -B versions:set -DnewVersion=${GITHUB_REF_NAME}
 
+      - name: Checkstyle
+        run: ./mvnw -B checkstyle:check
+
       - name: Publish to Maven Central
         run: ./mvnw -B -Prelease deploy -DskipTests
         env:

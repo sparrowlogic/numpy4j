@@ -1,11 +1,12 @@
 package com.sparrowlogic.numpy4j;
 
+import org.jspecify.annotations.Nullable;
 import java.util.Arrays;
 
 /**
  * ML-specific operations: softmax, layer_norm, conv1d, greedy/beam search,
  * top-k/top-p sampling, temperature scaling, cross-entropy.
- */
+     */
 public final class ML {
     private ML() {
     }
@@ -14,11 +15,20 @@ public final class ML {
 
     /**
      * Softmax along last axis. Numerically stable (subtract max).
+     *
+     * @param a input array
+     * @return result array
      */
     public static NdArray softmax(final NdArray a) {
         return softmaxImpl(a, false);
     }
 
+    /**
+     * logSoftmax operation.
+     *
+     * @param a input array
+     * @return result array
+     */
     public static NdArray logSoftmax(final NdArray a) {
         return softmaxImpl(a, true);
     }
@@ -60,6 +70,10 @@ public final class ML {
 
     /**
      * Cross-entropy loss: -sum(target * log(pred)) / n
+     *
+     * @param logits input logits
+     * @param targets target distribution
+     * @return the computed value
      */
     public static float crossEntropy(final NdArray logits, final NdArray targets) {
         NdArray logProbs = logSoftmax(logits);
@@ -76,6 +90,12 @@ public final class ML {
 
     /**
      * Layer normalization along last axis: (x - mean) / sqrt(var + eps) * gamma + beta
+     *
+     * @param a input array
+     * @param gamma scale parameter
+     * @param beta shift parameter
+     * @param eps epsilon for numerical stability
+     * @return result array
      */
     public static NdArray layerNorm(final NdArray a, final NdArray gamma, final NdArray beta, final float eps) {
         NdArray c = a.contiguous();
@@ -111,11 +131,18 @@ public final class ML {
 
     /**
      * 1D convolution: input [batch, inCh, L], weight [outCh, inCh, K], bias [outCh]
+     *
+     * @param input input tensor
+     * @param weight convolution weights
+     * @param bias optional bias (nullable)
+     * @param stride convolution stride
+     * @param padding convolution padding
+     * @return result array
      */
     public static NdArray conv1d(
             final NdArray input,
             final NdArray weight,
-            final NdArray bias,
+            final @Nullable NdArray bias,
             final int stride,
             final int padding
     ) {
@@ -172,6 +199,9 @@ public final class ML {
 
     /**
      * Greedy search: argmax at each position along last axis. Returns INT32 indices.
+     *
+     * @param logits input logits
+     * @return result array
      */
     public static NdArray greedySearch(final NdArray logits) {
         return Reductions.argmax(logits, logits.ndim() - 1);
@@ -179,6 +209,10 @@ public final class ML {
 
     /**
      * Top-K: keep only top k logits, set rest to -inf. Returns modified logits.
+     *
+     * @param logits input logits
+     * @param k number of top elements
+     * @return result array
      */
     public static NdArray topK(final NdArray logits, final int k) {
         NdArray c = logits.contiguous();
@@ -204,6 +238,10 @@ public final class ML {
 
     /**
      * Top-P (nucleus): keep smallest set of logits whose cumulative prob >= p.
+     *
+     * @param logits input logits
+     * @param p cumulative probability threshold
+     * @return result array
      */
     public static NdArray topP(final NdArray logits, final float p) {
         NdArray probs = softmax(logits);
@@ -240,6 +278,10 @@ public final class ML {
 
     /**
      * Temperature scaling: logits / temperature
+     *
+     * @param logits input logits
+     * @param temperature temperature scaling factor
+     * @return result array
      */
     public static NdArray temperatureScale(final NdArray logits, final float temperature) {
         return Ufunc.divScalar(logits, temperature);
@@ -247,6 +289,10 @@ public final class ML {
 
     /**
      * Beam search — returns top-k token sequences. Simplified single-step version.
+     *
+     * @param logits input logits
+     * @param beamWidth beam width
+     * @return result array
      */
     public static int[][] beamSearch(final NdArray logits, final int beamWidth) {
         NdArray c = logits.contiguous();

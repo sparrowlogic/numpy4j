@@ -7,13 +7,17 @@ import java.util.Arrays;
  * Shape manipulation ops matching NumPy: reshape, transpose, squeeze,
  * unsqueeze, expand_dims, flatten, ravel, concatenate, stack, split,
  * tile, repeat, broadcast_to.
- */
+     */
 public final class ShapeOps {
     private ShapeOps() {
     }
 
     /**
      * View-based reshape (must be contiguous). Infers -1 dimension.
+     *
+     * @param a input array
+     * @param newShape target shape
+     * @return result array
      */
     public static NdArray reshape(final NdArray a, final int... newShape) {
         // Resolve -1
@@ -41,6 +45,9 @@ public final class ShapeOps {
 
     /**
      * Transpose (reverse axes) — returns a view.
+     *
+     * @param a input array
+     * @return result array
      */
     public static NdArray transpose(final NdArray a) {
         int[] axes = new int[a.ndim()];
@@ -52,6 +59,10 @@ public final class ShapeOps {
 
     /**
      * Transpose with explicit axis permutation — returns a view.
+     *
+     * @param a input array
+     * @param axes axis permutation
+     * @return result array
      */
     public static NdArray transpose(final NdArray a, final int... axes) {
         int[] oldShape = a.shape();
@@ -67,6 +78,9 @@ public final class ShapeOps {
 
     /**
      * Remove all size-1 dimensions.
+     *
+     * @param a input array
+     * @return result array
      */
     public static NdArray squeeze(final NdArray a) {
         int[] shape = a.shape();
@@ -92,6 +106,10 @@ public final class ShapeOps {
 
     /**
      * Add a size-1 dimension at the given axis.
+     *
+     * @param a input array
+     * @param axis axis index
+     * @return result array
      */
     public static NdArray expandDims(final NdArray a, final int axis) {
         int ax = axis < 0 ? axis + a.ndim() + 1 : axis;
@@ -114,6 +132,9 @@ public final class ShapeOps {
 
     /**
      * Flatten to 1D (contiguous copy).
+     *
+     * @param a input array
+     * @return result array
      */
     public static NdArray flatten(final NdArray a) {
         return reshape(a, (int) a.size());
@@ -121,6 +142,9 @@ public final class ShapeOps {
 
     /**
      * Ravel — same as flatten for C-contiguous.
+     *
+     * @param a input array
+     * @return result array
      */
     public static NdArray ravel(final NdArray a) {
         return flatten(a);
@@ -128,6 +152,10 @@ public final class ShapeOps {
 
     /**
      * Concatenate arrays along an axis.
+     *
+     * @param arrays arrays to combine
+     * @param axis axis index
+     * @return result array
      */
     public static NdArray concatenate(final NdArray[] arrays, final int axis) {
         int ax = axis < 0 ? axis + arrays[0].ndim() : axis;
@@ -152,6 +180,10 @@ public final class ShapeOps {
 
     /**
      * Stack arrays along a new axis.
+     *
+     * @param arrays arrays to combine
+     * @param axis axis index
+     * @return result array
      */
     public static NdArray stack(final NdArray[] arrays, final int axis) {
         NdArray[] expanded = new NdArray[arrays.length];
@@ -163,6 +195,10 @@ public final class ShapeOps {
 
     /**
      * Tile: repeat array along each axis.
+     *
+     * @param a input array
+     * @param reps repetition counts
+     * @return result array
      */
     public static NdArray tile(final NdArray a, final int... reps) {
         NdArray result = a;
@@ -178,6 +214,11 @@ public final class ShapeOps {
 
     /**
      * Repeat each element along axis.
+     *
+     * @param a input array
+     * @param repeats number of repeats
+     * @param axis axis index
+     * @return result array
      */
     public static NdArray repeat(final NdArray a, final int repeats, final int axis) {
         int ax = axis < 0 ? axis + a.ndim() : axis;
@@ -208,6 +249,9 @@ public final class ShapeOps {
 
     /**
      * Reverse elements of 1D array. For nD, reverses along all axes.
+     *
+     * @param a input array
+     * @return result array
      */
     public static NdArray flip(final NdArray a) {
         NdArray c = a.contiguous();
@@ -221,6 +265,9 @@ public final class ShapeOps {
 
     /**
      * Flip left-right (reverse axis 1).
+     *
+     * @param a input array
+     * @return result array
      */
     public static NdArray fliplr(final NdArray a) {
         return flipAxis(a, 1);
@@ -228,6 +275,9 @@ public final class ShapeOps {
 
     /**
      * Flip up-down (reverse axis 0).
+     *
+     * @param a input array
+     * @return result array
      */
     public static NdArray flipud(final NdArray a) {
         return flipAxis(a, 0);
@@ -251,6 +301,10 @@ public final class ShapeOps {
 
     /**
      * Roll elements by shift positions.
+     *
+     * @param a input array
+     * @param shift shift amount
+     * @return result array
      */
     public static NdArray roll(final NdArray a, final int shift) {
         NdArray c = a.contiguous();
@@ -265,6 +319,12 @@ public final class ShapeOps {
 
     /**
      * Pad 1D array with constant value.
+     *
+     * @param a input array
+     * @param padBefore padding before
+     * @param padAfter padding after
+     * @param value fill value
+     * @return result array
      */
     public static NdArray pad(final NdArray a, final int padBefore, final int padAfter, final float value) {
         NdArray c = a.contiguous();
@@ -280,6 +340,9 @@ public final class ShapeOps {
 
     /**
      * Upper triangular.
+     *
+     * @param a input array
+     * @return result array
      */
     public static NdArray triu(final NdArray a) {
         NdArray c = a.contiguous();
@@ -296,6 +359,9 @@ public final class ShapeOps {
 
     /**
      * Lower triangular.
+     *
+     * @param a input array
+     * @return result array
      */
     public static NdArray tril(final NdArray a) {
         NdArray c = a.contiguous();
@@ -312,6 +378,9 @@ public final class ShapeOps {
 
     /**
      * Extract diagonal from 2D matrix.
+     *
+     * @param a input array
+     * @return result array
      */
     public static NdArray diag(final NdArray a) {
         return diagonal(a);
@@ -319,6 +388,9 @@ public final class ShapeOps {
 
     /**
      * Extract diagonal.
+     *
+     * @param a input array
+     * @return result array
      */
     public static NdArray diagonal(final NdArray a) {
         NdArray c = a.contiguous();
@@ -333,6 +405,9 @@ public final class ShapeOps {
 
     /**
      * Construct diagonal matrix from 1D vector.
+     *
+     * @param v input vector
+     * @return result array
      */
     public static NdArray diagConstruct(final NdArray v) {
         NdArray c = v.contiguous();
@@ -346,6 +421,9 @@ public final class ShapeOps {
 
     /**
      * Trace: sum of diagonal elements.
+     *
+     * @param a input array
+     * @return the computed value
      */
     public static float trace(final NdArray a) {
         NdArray d = diagonal(a);
@@ -356,6 +434,9 @@ public final class ShapeOps {
 
     /**
      * Sorted unique elements.
+     *
+     * @param a input array
+     * @return result array
      */
     public static NdArray unique(final NdArray a) {
         float[] data = a.toFloatArray();
@@ -373,6 +454,9 @@ public final class ShapeOps {
 
     /**
      * First-order difference.
+     *
+     * @param a input array
+     * @return result array
      */
     public static NdArray diff(final NdArray a) {
         NdArray c = a.contiguous();
@@ -386,6 +470,9 @@ public final class ShapeOps {
 
     /**
      * Numerical gradient (central differences, forward/backward at edges).
+     *
+     * @param a input array
+     * @return result array
      */
     public static NdArray gradient(final NdArray a) {
         NdArray c = a.contiguous();
@@ -407,6 +494,10 @@ public final class ShapeOps {
 
     /**
      * Split array into equal parts.
+     *
+     * @param a input array
+     * @param nSections number of sections
+     * @return result array
      */
     public static NdArray[] split(final NdArray a, final int nSections) {
         int n = (int) a.size();
@@ -425,6 +516,10 @@ public final class ShapeOps {
 
     /**
      * Horizontal stack (concatenate along axis 0 for 1D).
+     *
+     * @param a input array
+     * @param b second array
+     * @return result array
      */
     public static NdArray hstack(final NdArray a, final NdArray b) {
         return concatenate(new NdArray[]{a, b}, 0);
@@ -432,6 +527,10 @@ public final class ShapeOps {
 
     /**
      * Vertical stack (stack as rows).
+     *
+     * @param a input array
+     * @param b second array
+     * @return result array
      */
     public static NdArray vstack(final NdArray a, final NdArray b) {
         NdArray ra = a.ndim() == 1 ? reshape(a, 1, (int) a.size()) : a;
@@ -443,6 +542,11 @@ public final class ShapeOps {
 
     /**
      * Swap two axes (returns a view).
+     *
+     * @param a input array
+     * @param axis1 first axis
+     * @param axis2 second axis
+     * @return result array
      */
     public static NdArray swapaxes(final NdArray a, final int axis1, final int axis2) {
         int[] axes = new int[a.ndim()];
@@ -456,6 +560,11 @@ public final class ShapeOps {
 
     /**
      * Move axis from source to destination position.
+     *
+     * @param a input array
+     * @param source source axis
+     * @param destination destination axis
+     * @return result array
      */
     public static NdArray moveaxis(final NdArray a, final int source, final int destination) {
         int ndim = a.ndim();
@@ -479,6 +588,10 @@ public final class ShapeOps {
 
     /**
      * Meshgrid: create coordinate matrices from coordinate vectors.
+     *
+     * @param x x-coordinate vector
+     * @param y y-coordinate vector
+     * @return result array
      */
     public static NdArray[] meshgrid(final NdArray x, final NdArray y) {
         NdArray cx = x.contiguous();
@@ -500,6 +613,10 @@ public final class ShapeOps {
 
     /**
      * numpy.broadcast_to — broadcast array to target shape.
+     *
+     * @param a input array
+     * @param targetShape broadcast target shape
+     * @return result array
      */
     public static NdArray broadcastTo(final NdArray a, final int... targetShape) {
         int[] bStrides = ShapeUtils.broadcastStrides(a.shape(), a.strides(), targetShape);
@@ -518,6 +635,10 @@ public final class ShapeOps {
 
     /**
      * numpy.dstack — stack along third axis.
+     *
+     * @param a input array
+     * @param b second array
+     * @return result array
      */
     public static NdArray dstack(final NdArray a, final NdArray b) {
         NdArray ra = a.ndim() == 1 ? reshape(a, 1, (int) a.size(), 1) : (a.ndim() == 2 ? reshape(
@@ -537,6 +658,10 @@ public final class ShapeOps {
 
     /**
      * numpy.hsplit — split along axis 0 for 1D, axis 1 for 2D+.
+     *
+     * @param a input array
+     * @param nSections number of sections
+     * @return result array
      */
     public static NdArray[] hsplit(final NdArray a, final int nSections) {
         if (a.ndim() == 1) {
@@ -553,6 +678,10 @@ public final class ShapeOps {
 
     /**
      * numpy.vsplit — split along axis 0.
+     *
+     * @param a input array
+     * @param nSections number of sections
+     * @return result array
      */
     public static NdArray[] vsplit(final NdArray a, final int nSections) {
         int secSize = a.shape(0) / nSections;
@@ -565,6 +694,9 @@ public final class ShapeOps {
 
     /**
      * numpy.rot90 — rotate 2D array 90 degrees counter-clockwise.
+     *
+     * @param a input array
+     * @return result array
      */
     public static NdArray rot90(final NdArray a) {
         NdArray t = transpose(a).contiguous();
@@ -573,6 +705,11 @@ public final class ShapeOps {
 
     /**
      * numpy.insert — insert value at index in 1D array.
+     *
+     * @param a input array
+     * @param index element index
+     * @param value fill value
+     * @return result array
      */
     public static NdArray insert(final NdArray a, final int index, final float value) {
         NdArray c = a.contiguous();
@@ -590,6 +727,10 @@ public final class ShapeOps {
 
     /**
      * numpy.delete — remove element at index from 1D array.
+     *
+     * @param a input array
+     * @param index element index
+     * @return result array
      */
     public static NdArray delete(final NdArray a, final int index) {
         NdArray c = a.contiguous();
@@ -605,6 +746,10 @@ public final class ShapeOps {
 
     /**
      * numpy.append — append values to end of 1D array.
+     *
+     * @param a input array
+     * @param values values to append
+     * @return result array
      */
     public static NdArray append(final NdArray a, final NdArray values) {
         return concatenate(new NdArray[]{flatten(a), flatten(values)}, 0);

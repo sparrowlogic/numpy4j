@@ -1,5 +1,7 @@
 package com.sparrowlogic.numpy4j;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Basic einsum implementation supporting common patterns:
  * - "ij,jk->ik" (matmul)
@@ -11,6 +13,18 @@ public final class Einsum {
     private Einsum() {
     }
 
+    /**
+     * Einstein summation ({@code numpy.einsum}).
+     *
+     * <p>Supported patterns include matmul ({@code "ij,jk->ik"}), trace ({@code "ii->"}),
+     * transpose ({@code "ij->ji"}), element-wise dot ({@code "ij,ij->"}),
+     * and general binary contractions.</p>
+     *
+     * @param subscripts einsum subscript string (e.g. {@code "ij,jk->ik"})
+     * @param operands   one or two input arrays
+     * @return the result of the einsum contraction
+     * @throws UnsupportedOperationException if the pattern is not supported
+     */
     public static NdArray einsum(final String subscripts, final NdArray... operands) {
         String[] parts = subscripts.split("->");
         String lhs = parts[0];
@@ -58,7 +72,7 @@ public final class Einsum {
         return fast != null ? fast : generalBinaryEinsum(inA, inB, output, a, b);
     }
 
-    private static NdArray tryFastBinary(final String inA, final String inB, final String output,
+    private static @Nullable NdArray tryFastBinary(final String inA, final String inB, final String output,
                                          final NdArray a, final NdArray b) {
         if ("ij".equals(inA) && "jk".equals(inB) && "ik".equals(output)) {
             return MatMul.matmul(a, b);

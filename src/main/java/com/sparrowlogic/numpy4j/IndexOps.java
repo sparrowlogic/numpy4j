@@ -11,14 +11,27 @@ public final class IndexOps {
     }
 
     /**
-     * Slice along axis 0: a[start:stop:step] — returns a view when step=1.
+     * Slices along axis 0: {@code a[start:stop:step]} — returns a view when step=1.
+     *
+     * @param a     input array
+     * @param start start index (inclusive, supports negative)
+     * @param stop  stop index (exclusive, supports negative)
+     * @param step  step size
+     * @return sliced view
      */
     public static NdArray slice(final NdArray a, final int start, final int stop, final int step) {
         return slice(a, 0, start, stop, step);
     }
 
     /**
-     * Slice along a specific axis.
+     * Slices along a specific axis.
+     *
+     * @param a     input array
+     * @param axis  axis to slice along
+     * @param start start index (inclusive, supports negative)
+     * @param stop  stop index (exclusive, supports negative)
+     * @param step  step size
+     * @return sliced view
      */
     public static NdArray slice(final NdArray a, final int axis, final int start, final int stop, final int step) {
         int ax = axis < 0 ? axis + a.ndim() : axis;
@@ -42,7 +55,12 @@ public final class IndexOps {
     }
 
     /**
-     * Take elements along axis using integer indices.
+     * Takes elements along an axis using integer indices ({@code numpy.take}).
+     *
+     * @param a       input array
+     * @param indices integer indices to select
+     * @param axis    axis to take along
+     * @return gathered array
      */
     public static NdArray take(final NdArray a, final int[] indices, final int axis) {
         int ax = axis < 0 ? axis + a.ndim() : axis;
@@ -76,7 +94,11 @@ public final class IndexOps {
     }
 
     /**
-     * Boolean mask indexing — returns 1D array of elements where mask is true.
+     * Boolean mask indexing — returns 1-D array of elements where mask is non-zero.
+     *
+     * @param a    input array
+     * @param mask boolean mask (non-zero = true)
+     * @return 1-D array of selected elements
      */
     public static NdArray booleanIndex(final NdArray a, final NdArray mask) {
         NdArray ca = a.contiguous();
@@ -98,7 +120,12 @@ public final class IndexOps {
     }
 
     /**
-     * numpy.where(condition, x, y) — element-wise ternary.
+     * Element-wise ternary selection ({@code numpy.where}).
+     *
+     * @param condition boolean mask (non-zero = true)
+     * @param x         values where condition is true
+     * @param y         values where condition is false
+     * @return selected array
      */
     public static NdArray where(final NdArray condition, final NdArray x, final NdArray y) {
         NdArray out = NdArrayFactory.empty(x.arena(), DType.FLOAT32, x.shape());
@@ -112,7 +139,10 @@ public final class IndexOps {
     }
 
     /**
-     * Sort along last axis (returns new array).
+     * Sorts along the last axis ({@code numpy.sort}). Returns a new sorted array.
+     *
+     * @param a input array
+     * @return sorted copy
      */
     public static NdArray sort(final NdArray a) {
         NdArray out = a.contiguous();
@@ -144,7 +174,10 @@ public final class IndexOps {
     }
 
     /**
-     * Argsort along last axis. Returns INT32 indices.
+     * Returns indices that would sort the array along the last axis ({@code numpy.argsort}).
+     *
+     * @param a input array
+     * @return INT32 array of sort indices
      */
     public static NdArray argsort(final NdArray a) {
         NdArray c = a.contiguous();
@@ -169,7 +202,11 @@ public final class IndexOps {
     }
 
     /**
-     * Searchsorted — binary search in sorted 1D array.
+     * Binary search in a sorted 1-D array ({@code numpy.searchsorted}).
+     *
+     * @param a     sorted input array
+     * @param value value to search for
+     * @return insertion index
      */
     public static int searchsorted(final NdArray a, final float value) {
         NdArray c = a.contiguous();
@@ -187,7 +224,10 @@ public final class IndexOps {
     }
 
     /**
-     * numpy.nonzero — returns array of indices where elements are nonzero.
+     * Returns flat indices of non-zero elements ({@code numpy.nonzero}).
+     *
+     * @param a input array
+     * @return INT32 array of non-zero indices
      */
     public static NdArray nonzero(final NdArray a) {
         NdArray c = a.contiguous();
@@ -208,14 +248,21 @@ public final class IndexOps {
     }
 
     /**
-     * numpy.argwhere — same as nonzero for 1D.
+     * Returns indices of non-zero elements ({@code numpy.argwhere}). Same as {@link #nonzero(NdArray)} for 1-D.
+     *
+     * @param a input array
+     * @return INT32 array of non-zero indices
      */
     public static NdArray argwhere(final NdArray a) {
         return nonzero(a);
     }
 
     /**
-     * numpy.partition — partially sort so element at kth position is in sorted position.
+     * Partially sorts so the kth element is in its sorted position ({@code numpy.partition}).
+     *
+     * @param a   input array
+     * @param kth partition index
+     * @return partitioned array
      */
     public static NdArray partition(final NdArray a, final int kth) {
         float[] data = a.toFloatArray();
@@ -253,7 +300,11 @@ public final class IndexOps {
     }
 
     /**
-     * numpy.argpartition — indices that would partition.
+     * Returns indices that would partition the array ({@code numpy.argpartition}).
+     *
+     * @param a   input array
+     * @param kth partition index
+     * @return INT32 array of partition indices
      */
     public static NdArray argpartition(final NdArray a, final int kth) {
         float[] data = a.toFloatArray();
@@ -283,7 +334,11 @@ public final class IndexOps {
     }
 
     /**
-     * Fancy indexing — select elements by integer index array (1D).
+     * Fancy indexing — selects elements by integer index array from a 1-D array.
+     *
+     * @param a       input array
+     * @param indices integer indices to select
+     * @return 1-D array of selected elements
      */
     public static NdArray fancyIndex(final NdArray a, final int[] indices) {
         NdArray c = a.contiguous();
@@ -295,7 +350,11 @@ public final class IndexOps {
     }
 
     /**
-     * numpy.put — set values at flat indices.
+     * Sets values at flat indices in-place ({@code numpy.put}).
+     *
+     * @param a       target array (modified in-place)
+     * @param indices flat indices to set
+     * @param values  values to write (cycled if shorter than indices)
      */
     public static void put(final NdArray a, final int[] indices, final float[] values) {
         for (int i = 0; i < indices.length; i++) {

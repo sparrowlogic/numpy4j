@@ -9,7 +9,10 @@ public final class FFT {
     }
 
     /**
-     * Complex FFT. Input: float array of [re0, im0, re1, im1, ...]. Returns same format.
+     * Complex FFT ({@code numpy.fft.fft}).
+     *
+     * @param input interleaved complex array [re0, im0, re1, im1, ...]
+     * @return transformed interleaved complex array
      */
     public static float[] fft(final float[] input) {
         int n = input.length / 2;
@@ -20,7 +23,12 @@ public final class FFT {
     }
 
     /**
-     * NdArray wrapper for fft.
+     * Complex FFT on an {@link NdArray} ({@code numpy.fft.fft}).
+     *
+     * <p>1-D real input is zero-padded to complex. 2-D input with last dim=2 is treated as interleaved complex.</p>
+     *
+     * @param a input array (real 1-D or interleaved complex)
+     * @return complex result as shape (n, 2)
      */
     public static NdArray fft(final NdArray a) {
         float[] data = a.toFloatArray();
@@ -38,7 +46,10 @@ public final class FFT {
     }
 
     /**
-     * Inverse FFT.
+     * Inverse complex FFT ({@code numpy.fft.ifft}).
+     *
+     * @param input interleaved complex array
+     * @return inverse-transformed interleaved complex array
      */
     public static float[] ifft(final float[] input) {
         int n = input.length / 2;
@@ -55,7 +66,10 @@ public final class FFT {
     }
 
     /**
-     * Real FFT — input is real float array, output is complex [re, im, ...] of length n/2+1 pairs.
+     * Real-input FFT ({@code numpy.fft.rfft}).
+     *
+     * @param realInput real-valued input array
+     * @return interleaved complex output of length (n/2+1) pairs
      */
     public static float[] rfft(final float[] realInput) {
         int n = realInput.length;
@@ -71,7 +85,11 @@ public final class FFT {
     }
 
     /**
-     * Inverse real FFT.
+     * Inverse real FFT ({@code numpy.fft.irfft}).
+     *
+     * @param complexInput interleaved complex input from {@link #rfft(float[])}
+     * @param n            output length
+     * @return real-valued output array of length n
      */
     public static float[] irfft(final float[] complexInput, final int n) {
         float[] full = new float[n * 2];
@@ -91,7 +109,11 @@ public final class FFT {
     }
 
     /**
-     * numpy.fft.fftfreq
+     * DFT sample frequencies ({@code numpy.fft.fftfreq}).
+     *
+     * @param n window length
+     * @param d sample spacing
+     * @return frequency bin centers
      */
     public static double[] fftfreq(final int n, final double d) {
         double[] freq = new double[n];
@@ -107,7 +129,11 @@ public final class FFT {
     }
 
     /**
-     * numpy.fft.rfftfreq
+     * DFT sample frequencies for {@link #rfft(float[])} output ({@code numpy.fft.rfftfreq}).
+     *
+     * @param n window length
+     * @param d sample spacing
+     * @return frequency bin centers (length n/2+1)
      */
     public static double[] rfftfreq(final int n, final double d) {
         int len = n / 2 + 1;
@@ -120,7 +146,10 @@ public final class FFT {
     }
 
     /**
-     * numpy.fft.fftshift — shift zero-frequency to center.
+     * Shifts zero-frequency component to center ({@code numpy.fft.fftshift}).
+     *
+     * @param input frequency-domain array
+     * @return shifted array
      */
     public static float[] fftshift(final float[] input) {
         int n = input.length;
@@ -134,7 +163,10 @@ public final class FFT {
     // ── NdArray wrappers ──
 
     /**
-     * numpy.fft.fft2 — 2D FFT. Input: real (rows,cols). Output: complex (rows,cols,2).
+     * 2-D FFT ({@code numpy.fft.fft2}).
+     *
+     * @param a real input array of shape (rows, cols)
+     * @return complex output of shape (rows, cols, 2)
      */
     public static NdArray fft2(final NdArray a) {
         int rows = a.shape(0);
@@ -185,7 +217,10 @@ public final class FFT {
     }
 
     /**
-     * numpy.fft.ifft2 — 2D inverse FFT. Input: complex (rows,cols,2). Output: real (rows,cols).
+     * 2-D inverse FFT ({@code numpy.fft.ifft2}).
+     *
+     * @param a complex input of shape (rows, cols, 2)
+     * @return real output of shape (rows, cols)
      */
     public static NdArray ifft2(final NdArray a) {
         int rows = a.shape(0);
@@ -225,7 +260,10 @@ public final class FFT {
     }
 
     /**
-     * numpy.fft.fftn — N-dimensional FFT. For 2D, delegates to fft2.
+     * N-dimensional FFT ({@code numpy.fft.fftn}). Delegates to {@link #fft2(NdArray)} for 2-D input.
+     *
+     * @param a input array
+     * @return complex FFT result
      */
     public static NdArray fftn(final NdArray a) {
         if (a.ndim() == 2) {

@@ -5,26 +5,53 @@ import java.lang.foreign.ValueLayout;
 /**
  * Reduction operations matching NumPy: sum, prod, mean, std, var, min, max,
  * argmin, argmax, cumsum, cumprod, all, any, nonzero.
- */
+     */
 public final class Reductions {
     private Reductions() {
     }
 
     // ── Full reductions (no axis) ──
 
+    /**
+     * Sum of all elements ({@code numpy.sum}).
+     *
+     * @param a input array
+     * @return the computed value
+     */
     public static float sum(final NdArray a) {
         NdArray c = a.contiguous();
         return SimdOps.get().reduceSum(c.data(), a.size());
     }
 
+    /**
+     * Sum of all elements ({@code numpy.sum}).
+     *
+     * @param a input array
+     * @param axis axis to reduce
+     * @return result array
+     */
     public static NdArray sum(final NdArray a, final int axis) {
         return axisReduce(a, axis, false, 0f, Float::sum);
     }
 
+    /**
+     * Sum of all elements ({@code numpy.sum}).
+     *
+     * @param a input array
+     * @param axis axis to reduce
+     * @param keepdims whether to keep reduced dimensions
+     * @return result array
+     */
     public static NdArray sum(final NdArray a, final int axis, final boolean keepdims) {
         return axisReduce(a, axis, keepdims, 0f, Float::sum);
     }
 
+    /**
+     * Product of all elements ({@code numpy.prod}).
+     *
+     * @param a input array
+     * @return the computed value
+     */
     public static float prod(final NdArray a) {
         NdArray c = a.contiguous();
         float p = 1f;
@@ -34,15 +61,34 @@ public final class Reductions {
         return p;
     }
 
+    /**
+     * Arithmetic mean ({@code numpy.mean}).
+     *
+     * @param a input array
+     * @return the computed value
+     */
     public static float mean(final NdArray a) {
         return sum(a) / a.size();
     }
 
+    /**
+     * Arithmetic mean ({@code numpy.mean}).
+     *
+     * @param a input array
+     * @param axis axis to reduce
+     * @return result array
+     */
     public static NdArray mean(final NdArray a, final int axis) {
         NdArray s = sum(a, axis);
         return Ufunc.divScalar(s, a.shape(axis));
     }
 
+    /**
+     * Variance ({@code numpy.var}).
+     *
+     * @param a input array
+     * @return the computed value
+     */
     public static float var(final NdArray a) {
         float m = mean(a);
         NdArray c = a.contiguous();
@@ -54,26 +100,64 @@ public final class Reductions {
         return acc / a.size();
     }
 
+    /**
+     * Standard deviation ({@code numpy.std}).
+     *
+     * @param a input array
+     * @return the computed value
+     */
     public static float std(final NdArray a) {
         return (float) Math.sqrt(var(a));
     }
 
+    /**
+     * Maximum value ({@code numpy.max}).
+     *
+     * @param a input array
+     * @return the computed value
+     */
     public static float max(final NdArray a) {
         return SimdOps.get().reduceMax(a.contiguous().data(), a.size());
     }
 
+    /**
+     * Maximum value ({@code numpy.max}).
+     *
+     * @param a input array
+     * @param axis axis to reduce
+     * @return result array
+     */
     public static NdArray max(final NdArray a, final int axis) {
         return axisReduce(a, axis, false, Float.NEGATIVE_INFINITY, Math::max);
     }
 
+    /**
+     * Minimum value ({@code numpy.min}).
+     *
+     * @param a input array
+     * @return the computed value
+     */
     public static float min(final NdArray a) {
         return SimdOps.get().reduceMin(a.contiguous().data(), a.size());
     }
 
+    /**
+     * Minimum value ({@code numpy.min}).
+     *
+     * @param a input array
+     * @param axis axis to reduce
+     * @return result array
+     */
     public static NdArray min(final NdArray a, final int axis) {
         return axisReduce(a, axis, false, Float.POSITIVE_INFINITY, Math::min);
     }
 
+    /**
+     * Index of maximum value ({@code numpy.argmax}).
+     *
+     * @param a input array
+     * @return the index
+     */
     public static long argmax(final NdArray a) {
         NdArray c = a.contiguous();
         float best = Float.NEGATIVE_INFINITY;
@@ -88,10 +172,23 @@ public final class Reductions {
         return idx;
     }
 
+    /**
+     * Index of maximum value ({@code numpy.argmax}).
+     *
+     * @param a input array
+     * @param axis axis to reduce
+     * @return result array
+     */
     public static NdArray argmax(final NdArray a, final int axis) {
         return axisArgReduce(a, axis, true);
     }
 
+    /**
+     * Index of minimum value ({@code numpy.argmin}).
+     *
+     * @param a input array
+     * @return the index
+     */
     public static long argmin(final NdArray a) {
         NdArray c = a.contiguous();
         float best = Float.POSITIVE_INFINITY;
@@ -108,10 +205,23 @@ public final class Reductions {
 
     // ── Cumulative ──
 
+    /**
+     * Index of minimum value ({@code numpy.argmin}).
+     *
+     * @param a input array
+     * @param axis axis to reduce
+     * @return result array
+     */
     public static NdArray argmin(final NdArray a, final int axis) {
         return axisArgReduce(a, axis, false);
     }
 
+    /**
+     * Cumulative sum ({@code numpy.cumsum}).
+     *
+     * @param a input array
+     * @return result array
+     */
     public static NdArray cumsum(final NdArray a) {
         NdArray c = a.contiguous();
         NdArray out = NdArrayFactory.empty(a.arena(), DType.FLOAT32, (int) a.size());
@@ -123,6 +233,12 @@ public final class Reductions {
         return out;
     }
 
+    /**
+     * Cumulative product ({@code numpy.cumprod}).
+     *
+     * @param a input array
+     * @return result array
+     */
     public static NdArray cumprod(final NdArray a) {
         NdArray c = a.contiguous();
         NdArray out = NdArrayFactory.empty(a.arena(), DType.FLOAT32, (int) a.size());
@@ -136,6 +252,12 @@ public final class Reductions {
 
     // ── Boolean reductions ──
 
+    /**
+     * True if all elements are non-zero ({@code numpy.all}).
+     *
+     * @param a input array
+     * @return the result
+     */
     public static boolean all(final NdArray a) {
         NdArray c = a.contiguous();
         for (long i = 0; i < a.size(); i++) {
@@ -146,6 +268,12 @@ public final class Reductions {
         return true;
     }
 
+    /**
+     * True if any element is non-zero ({@code numpy.any}).
+     *
+     * @param a input array
+     * @return the result
+     */
     public static boolean any(final NdArray a) {
         NdArray c = a.contiguous();
         for (long i = 0; i < a.size(); i++) {
@@ -258,6 +386,12 @@ public final class Reductions {
         return flat;
     }
 
+    /**
+     * Sum ignoring NaN ({@code numpy.nansum}).
+     *
+     * @param a input array
+     * @return the computed value
+     */
     public static float nansum(final NdArray a) {
         NdArray c = a.contiguous();
         float sum = 0;
@@ -270,6 +404,12 @@ public final class Reductions {
         return sum;
     }
 
+    /**
+     * Mean ignoring NaN ({@code numpy.nanmean}).
+     *
+     * @param a input array
+     * @return the computed value
+     */
     public static float nanmean(final NdArray a) {
         NdArray c = a.contiguous();
         float sum = 0;
@@ -284,10 +424,22 @@ public final class Reductions {
         return sum / count;
     }
 
+    /**
+     * Standard deviation ignoring NaN ({@code numpy.nanstd}).
+     *
+     * @param a input array
+     * @return the computed value
+     */
     public static float nanstd(final NdArray a) {
         return (float) Math.sqrt(nanvar(a));
     }
 
+    /**
+     * Variance ignoring NaN ({@code numpy.nanvar}).
+     *
+     * @param a input array
+     * @return the computed value
+     */
     public static float nanvar(final NdArray a) {
         float m = nanmean(a);
         NdArray c = a.contiguous();
@@ -304,6 +456,12 @@ public final class Reductions {
         return acc / count;
     }
 
+    /**
+     * Maximum ignoring NaN ({@code numpy.nanmax}).
+     *
+     * @param a input array
+     * @return the computed value
+     */
     public static float nanmax(final NdArray a) {
         NdArray c = a.contiguous();
         float max = Float.NEGATIVE_INFINITY;
@@ -316,6 +474,12 @@ public final class Reductions {
         return max;
     }
 
+    /**
+     * Minimum ignoring NaN ({@code numpy.nanmin}).
+     *
+     * @param a input array
+     * @return the computed value
+     */
     public static float nanmin(final NdArray a) {
         NdArray c = a.contiguous();
         float min = Float.POSITIVE_INFINITY;
@@ -328,6 +492,12 @@ public final class Reductions {
         return min;
     }
 
+    /**
+     * Index of maximum ignoring NaN ({@code numpy.nanargmax}).
+     *
+     * @param a input array
+     * @return the index
+     */
     public static long nanargmax(final NdArray a) {
         NdArray c = a.contiguous();
         float best = Float.NEGATIVE_INFINITY;
@@ -342,6 +512,12 @@ public final class Reductions {
         return idx;
     }
 
+    /**
+     * Index of minimum ignoring NaN ({@code numpy.nanargmin}).
+     *
+     * @param a input array
+     * @return the index
+     */
     public static long nanargmin(final NdArray a) {
         NdArray c = a.contiguous();
         float best = Float.POSITIVE_INFINITY;
@@ -358,6 +534,12 @@ public final class Reductions {
 
     // ── Statistics ──
 
+    /**
+     * Median value ({@code numpy.median}).
+     *
+     * @param a input array
+     * @return the computed value
+     */
     public static float median(final NdArray a) {
         float[] sorted = a.toFloatArray();
         java.util.Arrays.sort(sorted);
@@ -365,6 +547,13 @@ public final class Reductions {
         return n % 2 == 0 ? (sorted[n / 2 - 1] + sorted[n / 2]) / 2f : sorted[n / 2];
     }
 
+    /**
+     * Percentile value ({@code numpy.percentile}).
+     *
+     * @param a input array
+     * @param q percentile (0-100)
+     * @return the computed value
+     */
     public static float percentile(final NdArray a, final float q) {
         float[] sorted = a.toFloatArray();
         java.util.Arrays.sort(sorted);
@@ -379,6 +568,10 @@ public final class Reductions {
 
     /**
      * Histogram: returns {counts, bin_edges}.
+     *
+     * @param a input array
+     * @param bins bins
+     * @return result array
      */
     public static NdArray[] histogram(final NdArray a, final int bins) {
         float[] data = a.toFloatArray();
@@ -412,6 +605,12 @@ public final class Reductions {
 
     /**
      * numpy.allclose
+     *
+     * @param a input array
+     * @param b second array
+     * @param rtol rtol
+     * @param atol atol
+     * @return the result
      */
     public static boolean allclose(final NdArray a, final NdArray b, final float rtol, final float atol) {
         NdArray ca = a.contiguous();
@@ -428,6 +627,10 @@ public final class Reductions {
 
     /**
      * numpy.array_equal
+     *
+     * @param a input array
+     * @param b second array
+     * @return the result
      */
     public static boolean arrayEqual(final NdArray a, final NdArray b) {
         if (!java.util.Arrays.equals(a.shape(), b.shape())) {
@@ -449,6 +652,9 @@ public final class Reductions {
 
     /**
      * numpy.count_nonzero
+     *
+     * @param a input array
+     * @return the computed value
      */
     public static int countNonzero(final NdArray a) {
         NdArray c = a.contiguous();
@@ -463,6 +669,10 @@ public final class Reductions {
 
     /**
      * numpy.quantile (same as percentile but q in [0,1])
+     *
+     * @param a input array
+     * @param q q
+     * @return the computed value
      */
     public static float quantile(final NdArray a, final float q) {
         return percentile(a, q * 100f);
@@ -470,6 +680,10 @@ public final class Reductions {
 
     /**
      * numpy.average with optional weights
+     *
+     * @param a input array
+     * @param weights weights
+     * @return the computed value
      */
     public static float average(final NdArray a, final NdArray weights) {
         NdArray ca = a.contiguous();

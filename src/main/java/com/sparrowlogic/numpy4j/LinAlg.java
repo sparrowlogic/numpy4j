@@ -13,7 +13,10 @@ public final class LinAlg {
     // ── Norms ──
 
     /**
-     * Frobenius / L2 norm (vector or matrix).
+     * Frobenius / L2 norm ({@code numpy.linalg.norm}).
+     *
+     * @param a input vector or matrix
+     * @return the L2 (Frobenius) norm
      */
     public static float norm(final NdArray a) {
         NdArray c = a.contiguous();
@@ -26,7 +29,11 @@ public final class LinAlg {
     }
 
     /**
-     * Vector p-norm.
+     * Vector p-norm ({@code numpy.linalg.norm} with ord).
+     *
+     * @param a   input vector
+     * @param ord norm order (1, 2, inf, -inf, 0)
+     * @return the p-norm
      */
     public static float norm(final NdArray a, final float ord) {
         if (Float.isInfinite(ord)) {
@@ -56,7 +63,11 @@ public final class LinAlg {
     // ── Matrix operations (pure Java) ──
 
     /**
-     * Matrix inverse via Gauss-Jordan elimination.
+     * Matrix inverse via Gauss-Jordan elimination ({@code numpy.linalg.inv}).
+     *
+     * @param a square matrix
+     * @return the inverse matrix
+     * @throws ArithmeticException if the matrix is singular
      */
     public static NdArray inv(final NdArray a) {
         int n = a.shape(0);
@@ -115,7 +126,10 @@ public final class LinAlg {
     }
 
     /**
-     * Determinant via LU decomposition.
+     * Determinant via LU decomposition ({@code numpy.linalg.det}).
+     *
+     * @param a square matrix
+     * @return the determinant
      */
     public static float det(final NdArray a) {
         int n = a.shape(0);
@@ -148,7 +162,11 @@ public final class LinAlg {
     }
 
     /**
-     * Solve Ax = b via LU with partial pivoting.
+     * Solves the linear system Ax = b ({@code numpy.linalg.solve}).
+     *
+     * @param a coefficient matrix (n × n)
+     * @param b right-hand side vector (n)
+     * @return solution vector x
      */
     public static NdArray solve(final NdArray a, final NdArray b) {
         int n = a.shape(0);
@@ -198,7 +216,10 @@ public final class LinAlg {
     }
 
     /**
-     * Cholesky decomposition — returns lower triangular L where A = L @ L^T.
+     * Cholesky decomposition ({@code numpy.linalg.cholesky}).
+     *
+     * @param a symmetric positive-definite matrix
+     * @return lower triangular L where A = L @ L^T
      */
     public static NdArray cholesky(final NdArray a) {
         int n = a.shape(0);
@@ -225,7 +246,10 @@ public final class LinAlg {
     }
 
     /**
-     * QR decomposition via Gram-Schmidt. Returns {Q, R}.
+     * QR decomposition via Gram-Schmidt ({@code numpy.linalg.qr}).
+     *
+     * @param a input matrix (m × n)
+     * @return array {Q, R} where Q is orthogonal and R is upper triangular
      */
     public static NdArray[] qr(final NdArray a) {
         int m = a.shape(0);
@@ -279,7 +303,11 @@ public final class LinAlg {
     }
 
     /**
-     * Matrix power: A^n
+     * Matrix power: A^n ({@code numpy.linalg.matrix_power}).
+     *
+     * @param a square matrix
+     * @param n exponent (0 returns identity, negative uses inverse)
+     * @return A raised to the nth power
      */
     public static NdArray matrixPower(final NdArray a, final int n) {
         if (n == 0) {
@@ -356,7 +384,10 @@ public final class LinAlg {
     }
 
     /**
-     * SVD via iterative Jacobi method. Returns {U, S, Vt}.
+     * Singular Value Decomposition via iterative Jacobi ({@code numpy.linalg.svd}).
+     *
+     * @param a input matrix (m × n)
+     * @return array {U, S, Vt} where A ≈ U @ diag(S) @ Vt
      */
     public static NdArray[] svd(final NdArray a) {
         int m = a.shape(0);
@@ -503,7 +534,10 @@ public final class LinAlg {
     }
 
     /**
-     * Eigenvalues of a square matrix (real parts only, via QR iteration).
+     * Eigenvalues of a square matrix via QR iteration ({@code numpy.linalg.eigvals}).
+     *
+     * @param a square matrix
+     * @return 1-D array of eigenvalues (real parts only)
      */
     public static NdArray eigvals(final NdArray a) {
         int n = a.shape(0);
@@ -570,7 +604,10 @@ public final class LinAlg {
     }
 
     /**
-     * Moore-Penrose pseudoinverse via SVD: pinv = V S^-1 U^T
+     * Moore-Penrose pseudoinverse via SVD ({@code numpy.linalg.pinv}).
+     *
+     * @param a input matrix
+     * @return the pseudoinverse
      */
     public static NdArray pinv(final NdArray a) {
         NdArray[] usv = svd(a);
@@ -593,7 +630,10 @@ public final class LinAlg {
     }
 
     /**
-     * Matrix rank via SVD.
+     * Matrix rank via SVD ({@code numpy.linalg.matrix_rank}).
+     *
+     * @param a input matrix
+     * @return the numerical rank
      */
     public static int matrixRank(final NdArray a) {
         NdArray[] usv = svd(a);
@@ -610,7 +650,10 @@ public final class LinAlg {
     }
 
     /**
-     * Sign and log of absolute determinant. Returns {sign, logabsdet}.
+     * Sign and log of absolute determinant ({@code numpy.linalg.slogdet}).
+     *
+     * @param a square matrix
+     * @return float array {sign, logabsdet}
      */
     public static float[] slogdet(final NdArray a) {
         float d = det(a);
@@ -620,7 +663,10 @@ public final class LinAlg {
     }
 
     /**
-     * Eigenvalues of symmetric matrix (real, sorted ascending).
+     * Eigenvalues and eigenvectors of a symmetric matrix ({@code numpy.linalg.eigh}).
+     *
+     * @param a symmetric matrix
+     * @return array {eigenvalues (sorted ascending), eigenvectors (columns)}
      */
     public static NdArray[] eigh(final NdArray a) {
         NdArray eigenvalues = eigvals(a);
@@ -669,7 +715,10 @@ public final class LinAlg {
     }
 
     /**
-     * Condition number: ratio of largest to smallest singular value.
+     * Condition number: ratio of largest to smallest singular value ({@code numpy.linalg.cond}).
+     *
+     * @param a input matrix
+     * @return the condition number (infinity if singular)
      */
     public static float cond(final NdArray a) {
         NdArray[] usv = svd(a);
@@ -680,7 +729,11 @@ public final class LinAlg {
     }
 
     /**
-     * Least-squares solution via normal equations: x = (A^T A)^-1 A^T b
+     * Least-squares solution via normal equations ({@code numpy.linalg.lstsq}).
+     *
+     * @param a coefficient matrix (m × n)
+     * @param b right-hand side vector (m)
+     * @return least-squares solution x
      */
     public static NdArray lstsq(final NdArray a, final NdArray b) {
         NdArray at = ShapeOps.transpose(a);

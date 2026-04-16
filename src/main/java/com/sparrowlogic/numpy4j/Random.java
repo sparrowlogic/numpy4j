@@ -5,7 +5,7 @@ import java.lang.foreign.Arena;
 /**
  * Random number generation matching numpy.random with PCG64 PRNG.
  * PCG-XSL-RR 128/64 — same algorithm as numpy's default_rng().
- */
+     */
 public final class Random {
     // PCG64 state (128-bit state, 128-bit increment, using two longs each)
     private long stateHi;
@@ -18,6 +18,8 @@ public final class Random {
 
     /**
      * Create with seed matching numpy.random.default_rng(seed).
+     *
+     * @param seed seed
      */
     public Random(final long seed) {
         // Initialize PCG64 — simplified seeding matching numpy's approach
@@ -32,6 +34,8 @@ public final class Random {
 
     /**
      * Generate next 64-bit value using PCG-XSL-RR.
+     *
+     * @return the computed value
      */
     public long nextLong() {
         long oldHi = this.stateHi;
@@ -51,6 +55,8 @@ public final class Random {
 
     /**
      * Uniform [0, 1) double.
+     *
+     * @return the computed value
      */
     public double nextDouble() {
         return (this.nextLong() >>> 11) * 0x1.0p-53;
@@ -58,6 +64,8 @@ public final class Random {
 
     /**
      * Uniform [0, 1) float.
+     *
+     * @return the computed value
      */
     public float nextFloat() {
         return (this.nextLong() >>> 40) * 0x1.0p-24f;
@@ -65,6 +73,8 @@ public final class Random {
 
     /**
      * Standard normal via Box-Muller.
+     *
+     * @return the computed value
      */
     public float nextGaussian() {
         double u1 = this.nextDouble();
@@ -76,6 +86,12 @@ public final class Random {
 
     /**
      * numpy.random.uniform(low, high, size)
+     *
+     * @param arena memory arena
+     * @param low low
+     * @param high high
+     * @param shape shape
+     * @return result array
      */
     public NdArray uniform(final Arena arena, final float low, final float high, final int... shape) {
         NdArray out = NdArrayFactory.empty(arena, DType.FLOAT32, shape);
@@ -88,6 +104,12 @@ public final class Random {
 
     /**
      * numpy.random.normal(loc, scale, size)
+     *
+     * @param arena memory arena
+     * @param loc loc
+     * @param scale scale
+     * @param shape shape
+     * @return result array
      */
     public NdArray normal(final Arena arena, final float loc, final float scale, final int... shape) {
         NdArray out = NdArrayFactory.empty(arena, DType.FLOAT32, shape);
@@ -99,6 +121,12 @@ public final class Random {
 
     /**
      * numpy.random.randint(low, high, size) — returns INT32
+     *
+     * @param arena memory arena
+     * @param low low
+     * @param high high
+     * @param shape shape
+     * @return result array
      */
     public NdArray randint(final Arena arena, final int low, final int high, final int... shape) {
         NdArray out = NdArrayFactory.empty(arena, DType.INT32, shape);
@@ -112,6 +140,11 @@ public final class Random {
 
     /**
      * numpy.random.choice — sample from 1D array without replacement.
+     *
+     * @param arena memory arena
+     * @param a input array
+     * @param size size
+     * @return result array
      */
     public NdArray choice(final Arena arena, final NdArray a, final int size) {
         NdArray c = a.contiguous();
@@ -125,6 +158,8 @@ public final class Random {
 
     /**
      * Fisher-Yates shuffle (in-place).
+     *
+     * @param a input array
      */
     public void shuffle(final NdArray a) {
         NdArray c = a.contiguous();
@@ -139,6 +174,10 @@ public final class Random {
 
     /**
      * numpy.random.permutation — returns shuffled copy.
+     *
+     * @param arena memory arena
+     * @param n size parameter
+     * @return result array
      */
     public NdArray permutation(final Arena arena, final int n) {
         NdArray a = NdArrayFactory.arange(arena, n);
@@ -148,6 +187,10 @@ public final class Random {
 
     /**
      * Generator.standard_normal — normal(0,1).
+     *
+     * @param arena memory arena
+     * @param shape shape
+     * @return result array
      */
     public NdArray standardNormal(final Arena arena, final int... shape) {
         return this.normal(arena, 0f, 1f, shape);
@@ -155,6 +198,11 @@ public final class Random {
 
     /**
      * Generator.exponential — exponential distribution with given scale.
+     *
+     * @param arena memory arena
+     * @param scale scale
+     * @param shape shape
+     * @return result array
      */
     public NdArray exponential(final Arena arena, final float scale, final int... shape) {
         NdArray out = NdArrayFactory.empty(arena, DType.FLOAT32, shape);
@@ -166,6 +214,11 @@ public final class Random {
 
     /**
      * Generator.poisson — Poisson distribution via Knuth's algorithm.
+     *
+     * @param arena memory arena
+     * @param lam lam
+     * @param shape shape
+     * @return result array
      */
     public NdArray poisson(final Arena arena, final float lam, final int... shape) {
         NdArray out = NdArrayFactory.empty(arena, DType.FLOAT32, shape);
@@ -184,6 +237,12 @@ public final class Random {
 
     /**
      * Generator.binomial — binomial distribution.
+     *
+     * @param arena memory arena
+     * @param n size parameter
+     * @param p cumulative probability threshold
+     * @param shape shape
+     * @return result array
      */
     public NdArray binomial(final Arena arena, final int n, final float p, final int... shape) {
         NdArray out = NdArrayFactory.empty(arena, DType.FLOAT32, shape);

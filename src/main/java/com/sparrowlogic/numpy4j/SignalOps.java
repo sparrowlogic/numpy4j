@@ -2,13 +2,17 @@ package com.sparrowlogic.numpy4j;
 
 /**
  * Signal processing ops: convolve, correlate, interp.
- */
+     */
 public final class SignalOps {
     private SignalOps() {
     }
 
     /**
      * 1D convolution (full mode).
+     *
+     * @param a input array
+     * @param b second array
+     * @return result array
      */
     public static NdArray convolve(final NdArray a, final NdArray b) {
         float[] fa = a.toFloatArray();
@@ -27,6 +31,10 @@ public final class SignalOps {
 
     /**
      * 1D cross-correlation (full mode).
+     *
+     * @param a input array
+     * @param b second array
+     * @return result array
      */
     public static NdArray correlate(final NdArray a, final NdArray b) {
         float[] fa = a.toFloatArray();
@@ -50,6 +58,11 @@ public final class SignalOps {
 
     /**
      * 1D linear interpolation.
+     *
+     * @param x x-coordinate vector
+     * @param xp xp
+     * @param fp fp
+     * @return the computed value
      */
     public static float interp(final float x, final float[] xp, final float[] fp) {
         if (x <= xp[0]) {
