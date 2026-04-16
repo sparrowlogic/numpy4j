@@ -41,3 +41,6 @@ reference_repos/
 /.kiro/
 /.kiro/
 .kiro/
+
+### Generated reference files ###
+tools/numpy_reference.properties

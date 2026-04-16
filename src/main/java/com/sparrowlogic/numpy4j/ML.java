@@ -39,21 +39,32 @@ public final class ML {
         long nSlices = a.size() / lastDim;
         NdArray out = NdArrayFactory.empty(a.arena(), DType.FLOAT32, a.shape());
 
+        if (!log && AccelerateOps.isAvailable() && out.data().isNative()) {
+            for (long i = 0; i < a.size(); i++) {
+                out.flatSetFloat(i, c.flatGetFloat(i));
+            }
+            AccelerateOps.softmaxRows(out.data(), (int) nSlices, lastDim);
+            return out;
+        }
+
+        softmaxScalar(c, out, nSlices, lastDim, log);
+        return out;
+    }
+
+    private static void softmaxScalar(final NdArray c, final NdArray out,
+                                      final long nSlices, final int lastDim, final boolean log) {
         for (long s = 0; s < nSlices; s++) {
             long base = s * lastDim;
-            // Find max for numerical stability
             float max = Float.NEGATIVE_INFINITY;
             for (int i = 0; i < lastDim; i++) {
                 max = Math.max(max, c.flatGetFloat(base + i));
             }
-            // Compute exp(x - max) and sum
             float sum = 0;
             for (int i = 0; i < lastDim; i++) {
                 float e = (float) Math.exp(c.flatGetFloat(base + i) - max);
                 out.flatSetFloat(base + i, e);
                 sum += e;
             }
-            // Normalize
             if (log) {
                 float logSum = (float) Math.log(sum);
                 for (int i = 0; i < lastDim; i++) {
@@ -65,7 +76,6 @@ public final class ML {
                 }
             }
         }
-        return out;
     }
 
     /**
