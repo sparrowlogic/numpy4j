@@ -29,7 +29,7 @@
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <junit.version>5.12.1</junit.version>
+        <junit.version>6.1.0</junit.version>
     </properties>
 
     <url>https://github.com/sparrowlogic/numpy4j</url>
